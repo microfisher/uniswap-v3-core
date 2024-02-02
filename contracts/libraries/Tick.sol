@@ -7,6 +7,22 @@ import './SafeCast.sol';
 import './TickMath.sol';
 import './LiquidityMath.sol';
 
+interface ITickInfo {
+    function ticks(int24 tick)
+        external
+        view
+        returns (
+            uint128 liquidityGross,
+            int128 liquidityNet,
+            uint256 feeGrowthOutside0X128,
+            uint256 feeGrowthOutside1X128,
+            int56 tickCumulativeOutside,
+            uint160 secondsPerLiquidityOutsideX128,
+            uint32 secondsOutside,
+            bool initialized
+        );
+}
+
 /// @title Tick
 /// @notice Contains functions for managing tick processes and relevant calculations
 library Tick {
@@ -181,5 +197,26 @@ library Tick {
         info.tickCumulativeOutside = tickCumulative - info.tickCumulativeOutside;
         info.secondsOutside = time - info.secondsOutside;
         liquidityNet = info.liquidityNet;
+    }
+
+    function getCross(
+        address poolAddress,
+        int24 tick
+    ) internal returns (int128 liquidityNet) {
+
+        (   ,
+            int128 liquidityNet2,
+            ,
+            ,
+            ,
+            ,
+            ,
+            ) = ITickInfo(poolAddress).ticks(tick);
+        // info.feeGrowthOutside0X128 = feeGrowthGlobal0X128 - info.feeGrowthOutside0X128;
+        // info.feeGrowthOutside1X128 = feeGrowthGlobal1X128 - info.feeGrowthOutside1X128;
+        // info.secondsPerLiquidityOutsideX128 = secondsPerLiquidityCumulativeX128 - info.secondsPerLiquidityOutsideX128;
+        // info.tickCumulativeOutside = tickCumulative - info.tickCumulativeOutside;
+        // info.secondsOutside = time - info.secondsOutside;
+        liquidityNet = liquidityNet2;
     }
 }
